@@ -1,26 +1,34 @@
 ---
 title: "NavyBlue"
+author: "Cheang Ming, Nasruddine, Walter, Calvert, Chrystal"
 format: html
 editor: visual
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
+## Import packages
 ```{r}
-1 + 1
+#| message: FALSE
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
 ```
 
-You can add options to executable code like this
-
+## Import Data
 ```{r}
-#| echo: false
-2 * 2
+mot2000 <- read.csv("mode_of_transport_2000.csv")
+mot2005 <- read.csv("mode_of_transport_2005.csv")
+mot2010 <- read.csv("mode_of_transport_2010.csv")
+mot2015 <- read.csv("mode_of_transport_2015.csv")
+mot2020 <- read.csv("mode_of_transport_2020.csv")
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+## Print Table
+```{r}
+#| message: FALSE
+
+mot2000
+mot2005
+mot2010
+mot2015
+mot2020
+```
