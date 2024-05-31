@@ -6,7 +6,9 @@ editor: visual
 ---
 
 ## Import packages
+
 ```{r}
+#| label: Load all libraries
 #| message: FALSE
 library(tidyverse)
 library(ggplot2)
@@ -14,16 +16,41 @@ library(dplyr)
 ```
 
 ## Import Data
+
 ```{r}
-mot2000 <- read.csv("mode_of_transport_2000.csv")
-mot2005 <- read.csv("mode_of_transport_2005.csv")
-mot2010 <- read.csv("mode_of_transport_2010.csv")
-mot2015 <- read.csv("mode_of_transport_2015.csv")
-mot2020 <- read.csv("mode_of_transport_2020.csv")
+#| label: Load all datasets
+
+mot2000 <- read.csv("mode_of_transport_2000.csv", skip = 11, nrow = 15)
+mot2005 <- read.csv("mode_of_transport_2005.csv", skip = 11, nrow = 15)
+mot2010 <- read.csv("mode_of_transport_2010.csv", skip = 11, nrow = 13)
+mot2015 <- read.csv("mode_of_transport_2015.csv", skip = 11, nrow = 12)
+mot2020 <- read.csv("mode_of_transport_2020.csv", skip = 11, nrow = 13, header = TRUE, stringsAsFactors = FALSE)
+```
+
+## Adjust 2020 dataset use row 1 as header
+
+```{r}
+#| label: Adjust 2020 dataset
+
+
+# Replace column names that start with 'X' followed by digits with values from the first row
+#new_names <- ifelse(grepl("^X\\d+$", names(mot2020)), mot2020[1, which(grepl("^X\\d+$", names(mot2020)))], names(mot2020))
+
+# Set the new column names
+#names(mot2020) <- new_names
+
+# Remove the first row used as headers
+#mot2020 <- mot2020[-1, ]
+
+# Display the updated data frame
+#print(mot2020)
+
 ```
 
 ## Print Table
+
 ```{r}
+#| label: Print all datasets
 #| message: FALSE
 
 mot2000
