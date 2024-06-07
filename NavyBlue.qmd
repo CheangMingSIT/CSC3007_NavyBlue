@@ -25,6 +25,17 @@ mot2005 <- read.csv("mode_of_transport_2005.csv", skip = 11, nrow = 15)
 mot2010 <- read.csv("mode_of_transport_2010.csv", skip = 11, nrow = 13)
 mot2015 <- read.csv("mode_of_transport_2015.csv", skip = 11, nrow = 12)
 mot2020 <- read.csv("mode_of_transport_2020.csv", skip = 11, nrow = 13)
+colnames(mot2000) <- trimws(colnames(mot2000))
+colnames(mot2005) <- trimws(colnames(mot2005))
+colnames(mot2010) <- trimws(colnames(mot2010))
+colnames(mot2015) <- trimws(colnames(mot2015))
+colnames(mot2020) <- trimws(colnames(mot2020))
+# Trim whitespace from all character columns
+mot2000 <- mot2000 |> mutate(across(where(is.character), trimws))
+mot2005 <- mot2005 |> mutate(across(where(is.character), trimws))
+mot2010 <- mot2010 |> mutate(across(where(is.character), trimws))
+mot2015 <- mot2015 |> mutate(across(where(is.character), trimws))
+mot2020 <- mot2020 |> mutate(across(where(is.character), trimws))
 ```
 
 ## Adjust 2020 dataset use row 1 as header
@@ -72,14 +83,29 @@ mot2020
 #| label: Select the first column and the Total
 #| message: FALSE
 
-mot2000 <- mot2000 %>% select(1, 2)
-mot2005 <- mot2005 %>% select(1, 2)
-mot2010 <- mot2010 %>% select(1, 2)
-mot2015 <- mot2015 %>% select(1, 2)
-mot2020 <- mot2020 %>% select(1, 2)
+mot2000 <- mot2000 |> select(1, 2)
+mot2005 <- mot2005 |> select(1, 2)
+mot2010 <- mot2010 |> select(1, 2)
+mot2015 <- mot2015 |> select(1, 2)
+mot2020 <- mot2020 |> select(1, 2) #|> mutate(Categories = recode(Categories, "Taxi/Private Hire Car Only" = "Taxi Only"))
 
 mot2000
 mot2005
 mot2010
 mot2020
+```
+
+# Join all datasets (Rename Total to the year)
+
+```{r}
+#| label: Join all datasets
+#| message: FALSE
+
+mot <- full_join(mot2000, mot2005, by = "Categories") |>
+  full_join(mot2010, by = "Categories") |>
+  full_join(mot2015, by = "Categories") |>
+  full_join(mot2020, by = "Categories") |>
+  rename(`2000` = Total.x, `2005` = Total.y, `2010` = Total.x.x, `2015` = Total.y.y, `2020` = Total)
+
+mot
 ```
