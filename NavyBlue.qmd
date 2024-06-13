@@ -2,7 +2,7 @@
 title: "NavyBlue"
 author: "Cheang Ming, Nasruddine, Walter, Calvert, Chrystal"
 format: html
-editor: visual
+editor: source
 ---
 
 ## Import packages
@@ -10,27 +10,33 @@ editor: visual
 ```{r}
 #| label: Load all libraries
 #| message: FALSE
+
+# Loading all packages
 library(tidyverse)
-library(ggplot2)
 library(dplyr)
+library(gt)
+library(svglite)
 ```
 
 ## Import Data
 
 ```{r}
 #| label: Load all datasets
+#| message: FALSE
 
+# Read all csv into data frames and skipping the first 11 rows and reading the next 15 rows
 mot2000 <- read.csv("mode_of_transport_2000.csv", skip = 11, nrow = 15)
 mot2005 <- read.csv("mode_of_transport_2005.csv", skip = 11, nrow = 15)
 mot2010 <- read.csv("mode_of_transport_2010.csv", skip = 11, nrow = 13)
 mot2015 <- read.csv("mode_of_transport_2015.csv", skip = 11, nrow = 12)
 mot2020 <- read.csv("mode_of_transport_2020.csv", skip = 11, nrow = 13)
+# Trim all categories
 colnames(mot2000) <- trimws(colnames(mot2000))
 colnames(mot2005) <- trimws(colnames(mot2005))
 colnames(mot2010) <- trimws(colnames(mot2010))
 colnames(mot2015) <- trimws(colnames(mot2015))
 colnames(mot2020) <- trimws(colnames(mot2020))
-# Trim whitespace from all character columns
+# Trim white space from all character columns
 mot2000 <- mot2000 |> mutate(across(where(is.character), trimws))
 mot2005 <- mot2005 |> mutate(across(where(is.character), trimws))
 mot2010 <- mot2010 |> mutate(across(where(is.character), trimws))
@@ -42,7 +48,7 @@ mot2020 <- mot2020 |> mutate(across(where(is.character), trimws))
 
 ```{r}
 #| label: Adjust 2020 dataset
-
+#| message: FALSE
 
 # Replace column names that start with 'X' followed by digits with values from the first row
 new_names <- ifelse(grepl("^X\\.\\d+$", names(mot2020)), mot2020[1, which(grepl("^X\\.\\d+$", names(mot2020)))], names(mot2020))
@@ -62,6 +68,9 @@ colnames(mot2020)[which(names(mot2020) == "X")] <- "Categories"
 
 # Reset row names
 row.names(mot2020) <- NULL
+
+# Remove new_names
+rm(new_names)
 ```
 
 ## Print Table
@@ -70,6 +79,7 @@ row.names(mot2020) <- NULL
 #| label: Print all datasets
 #| message: FALSE
 
+# Print all tables
 mot2000
 mot2005
 mot2010
@@ -83,15 +93,104 @@ mot2020
 #| label: Select the first column and the Total
 #| message: FALSE
 
+# Select the first column and the Total
 mot2000 <- mot2000 |> select(1, 2)
 mot2005 <- mot2005 |> select(1, 2)
 mot2010 <- mot2010 |> select(1, 2)
 mot2015 <- mot2015 |> select(1, 2)
-mot2020 <- mot2020 |> select(1, 2) #|> mutate(Categories = recode(Categories, "Taxi/Private Hire Car Only" = "Taxi Only"))
+mot2020 <- mot2020 |> select(1, 2)
 
+# Print all tables
 mot2000
 mot2005
 mot2010
+mot2015
+mot2020
+```
+
+# Fix 2015 dataset from thousands to number
+
+```{r}
+#| label: Fix 2015 dataset
+#| message: FALSE
+
+# Multiply the 2015 data set by 1000 (as data set is in thousands from original data set)
+mot2015 <- mot2015 |> mutate(Total = as.numeric(gsub(",", "", Total)) * 1000)
+
+# Print all tables
+mot2000
+mot2005
+mot2010
+mot2015
+mot2020
+```
+
+# Fix 2000 and 2005 dataset by combining the two others row into one
+
+```{r}
+#| label: Fix 2000 and 2005 others dataset
+#| message: FALSE
+
+# Group all categories together and sum the total of similar categories
+mot2000 <- mot2000 |>
+  group_by(Categories) |>
+  summarise(Total = sum(Total))
+mot2005 <- mot2005 |>
+  group_by(Categories) |>
+  summarise(Total = sum(Total))
+
+# Print all tables
+mot2000
+mot2005
+mot2010
+mot2015
+mot2020
+```
+
+# Drop rows based on finalized table
+
+```{r}
+#| label: Drop rows based on finalized table
+#| message: FALSE
+
+# Categories to filter out
+categories_to_remove <- c("One Mode Of Transport", "Two Or More Modes Of Transport", "MRT & Car Only", "MRT & Another Mode", "Other Combinations Of MRT Or Public Bus", "Other combinations of MRT/LRT or Public Bus")
+
+# Use filter to drop rows based on finalized table
+mot2000 <- mot2000 |> filter(!Categories %in% categories_to_remove)
+mot2005 <- mot2005 |> filter(!Categories %in% categories_to_remove)
+mot2010 <- mot2010 |> filter(!Categories %in% categories_to_remove)
+mot2015 <- mot2015 |> filter(!Categories %in% categories_to_remove)
+mot2020 <- mot2020 |> filter(!Categories %in% categories_to_remove)
+
+# Print all tables
+mot2000
+mot2005
+mot2010
+mot2015
+mot2020
+
+# Remove categories_to_remove
+rm(categories_to_remove)
+```
+
+# Rename some columns of dataset from 2020 to match other years
+
+```{r}
+#| label: Rename some columns of dataset from 2020 to match other years
+#| message: FALSE
+
+# Using mutate and recode to rename rows
+mot2020 <- mot2020 |> mutate(Categories = recode(Categories,
+                                                 "MRT/LRT Only" = "MRT Only",
+                                                 "MRT/LRT & Public Bus Only" = "MRT & Public Bus Only",
+                                                 "Taxi/Private Hire Car Only" = "Taxi Only"))
+
+# Print all tables
+mot2000
+mot2005
+mot2010
+mot2015
 mot2020
 ```
 
@@ -101,11 +200,42 @@ mot2020
 #| label: Join all datasets
 #| message: FALSE
 
+# Join all data sets to one
 mot <- full_join(mot2000, mot2005, by = "Categories") |>
   full_join(mot2010, by = "Categories") |>
   full_join(mot2015, by = "Categories") |>
   full_join(mot2020, by = "Categories") |>
   rename(`2000` = Total.x, `2005` = Total.y, `2010` = Total.x.x, `2015` = Total.y.y, `2020` = Total)
+# Print joint data set
+mot
+```
+
+# List all categories total
+
+```{r}
+#| label: List all categories total
+#| message: FALSE
+
+# List all categories total
+mot <- mot |>
+  rowwise() |>
+  mutate(`Total List` = list(c(`2000`, `2005`, `2010`, `2015`, `2020`))) |> 
+  ungroup()
 
 mot
+
+```
+
+# Plot the data in a table with sparkline
+
+```{r}
+#| label: Plot the data in a table with sparkline
+#| message: FALSE
+
+# Plot the data in a table with sparkline
+
+mot |>
+  gt() |>
+  gtExtras::gt_plt_sparkline(column = `Total List`,
+                             fig_dim = c(20,40))
 ```
