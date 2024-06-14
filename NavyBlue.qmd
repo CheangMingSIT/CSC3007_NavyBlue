@@ -1,6 +1,6 @@
 ---
 title: "NavyBlue"
-author: "Cheang Ming, Nasruddine, Walter, Calvert, Chrystal"
+author: "Cheang Ming, Nasruddine, Walter, Calvert, Chrystal, Xian Hao"
 format: html
 editor: source
 ---
@@ -16,6 +16,7 @@ library(tidyverse)
 library(dplyr)
 library(gt)
 library(svglite)
+library(posterdown)
 ```
 
 ## Import Data
@@ -80,11 +81,11 @@ rm(new_names)
 #| message: FALSE
 
 # Print all tables
-mot2000
-mot2005
-mot2010
-mot2015
-mot2020
+# mot2000
+# mot2005
+# mot2010
+# mot2015
+# mot2020
 ```
 
 # Select the first column and the Total
@@ -210,6 +211,46 @@ mot <- full_join(mot2000, mot2005, by = "Categories") |>
 mot
 ```
 
+# Add percentage increase from 2000 to 2020
+```{r}
+#| label: Add percentage increase from 2000 to 2020
+#| message: FALSE
+#| warning: FALSE
+
+# Add percentage increase from 2000 to 2020
+mot <- mot |>
+  rowwise() |>
+  mutate(`%` = ((`2020` - `2000`) / `2000`) * 100) |>
+  ungroup()
+mot
+```
+
+# Alter percentage to 2 decimal places and alter their colors (Red for negative and Green for positive)
+```{r}
+#| label: Alter percentage to 2 decimal places and alter their colors
+#| message: FALSE
+#| warning: FALSE
+
+# Alter percentage to 2 decimal places
+mot <- mot |>
+  mutate(`%` = round(`%`, 2))
+```
+
+# Add new column to classify categories as either public or private transport
+```{r}
+#| label: Add new column to classify categories as either public or private transport
+
+# Add new column to classify categories as either public or private transport
+mot <- mot |>
+  mutate(`Public/Private` = case_when(
+    Categories %in% c("MRT & Public Bus Only", "MRT Only", "Public Bus Only") ~ "Public",
+    Categories %in% c("Private Chartered Bus/Van Only", "Taxi Only", "Car Only", "Lorry/Pickup Only", "Motorcycle/Scooter Only") ~ "Private",
+    Categories %in% c("No Transport Required", "Others") ~ "Others",
+    TRUE ~ "Total"
+  ))
+mot
+```
+
 # List all categories total
 
 ```{r}
@@ -219,11 +260,54 @@ mot
 # List all categories total
 mot <- mot |>
   rowwise() |>
-  mutate(`Total List` = list(c(`2000`, `2005`, `2010`, `2015`, `2020`))) |> 
+  mutate(`Total List` = list(c(`2000`, `2005`, `2010`, `2015`, `2020`))) |>
   ungroup()
 
 mot
 
+```
+
+# Remove Total Row 
+
+```{r}
+#| label: Remove Total Row
+#| message: FALSE
+
+# Remove Total Row
+mot <- mot |>
+  filter(Categories != "Total")
+mot
+```
+
+
+# Arrange by Public and Private Transport
+```{r}
+#| label: Arrange MRT & Public Bus Only row to the first row
+#| message: FALSE
+
+# Define the custom order
+custom_order <- c("MRT & Public Bus Only", "MRT Only", "Public Bus Only", 
+                  "Private Chartered Bus/Van Only", "Taxi Only", "Car Only", 
+                  "Lorry/Pickup Only", "Motorcycle/Scooter Only", 
+                  "No Transport Required", "Others")
+# Arrange MRT & Public Bus Only row to the first row
+mot <- mot |>
+  mutate(Categories = factor(Categories, levels = custom_order)) |>
+  arrange(Categories)
+mot
+```
+
+# Add stubble based on Public/Private
+```{r}
+#| label: Add stubble based on Public/Private
+
+# Add stubble based on Public/Private
+mot <- mot |>
+  gt(
+    groupname_col = 'Public/Private'
+  ) |>
+  tab_options(quarto.disable_processing = TRUE)
+mot
 ```
 
 # Plot the data in a table with sparkline
@@ -231,11 +315,33 @@ mot
 ```{r}
 #| label: Plot the data in a table with sparkline
 #| message: FALSE
+#| warning: FALSE
 
-# Plot the data in a table with sparkline
+# Plot the data in a table with sparkline and adjust colors for % increase
 
-mot |>
-  gt() |>
+mot <- mot |>
   gtExtras::gt_plt_sparkline(column = `Total List`,
-                             fig_dim = c(20,40))
+                             fig_dim = c(20,55),
+                             type = "ref_last",
+                             palette = c("black", "black", "red", "green", "grey"))
+mot
+```
+
+# Alter % increase colors
+```{r}
+#| label: Alter % increase colors
+#| message: FALSE
+#| warning: FALSE
+
+# Alter % increase colors
+mot <- mot |>
+  gt::tab_style(
+    style = gt::cell_text(color = "forestgreen"),
+    locations = gt::cells_body(columns = `%`,
+                                rows = `%` > 0)) |>
+  gt::tab_style(
+    style = gt::cell_text(color = "red"),
+    locations = gt::cells_body(columns = `%`,
+                                rows = `%` < 0))
+mot
 ```
