@@ -251,6 +251,8 @@ mot <- mot |>
 mot
 ```
 
+
+
 # List all categories total
 
 ```{r}
@@ -280,6 +282,7 @@ mot
 ```
 
 
+
 # Arrange by Public and Private Transport
 ```{r}
 #| label: Arrange MRT & Public Bus Only row to the first row
@@ -290,12 +293,63 @@ custom_order <- c("MRT & Public Bus Only", "MRT Only", "Public Bus Only",
                   "Private Chartered Bus/Van Only", "Taxi Only", "Car Only", 
                   "Lorry/Pickup Only", "Motorcycle/Scooter Only", 
                   "No Transport Required", "Others")
+
+
+
 # Arrange MRT & Public Bus Only row to the first row
 mot <- mot |>
+  rowwise() |>
   mutate(Categories = factor(Categories, levels = custom_order)) |>
   arrange(Categories)
-mot
+
 ```
+
+# Add total for public and private
+```{r}
+# Calculate totals for Public and Private transport for each year
+public_private_totals <- mot |>
+  group_by(`Public/Private`) |>
+  summarise(across(`2000`:`2020`, sum, na.rm = TRUE), .groups = 'drop') |>
+  mutate(Categories = `Public/Private`,
+         `%` = NA, # Add NA for % column
+         `Public/Private` = `Public/Private`,
+         `Total List` = NA) # Add NA for Total List column
+
+
+# Insert the summary rows into the original data frame
+mot <- mot |>
+  bind_rows(public_private_totals) |>
+  arrange(match(Categories, custom_order), desc(`Public/Private`))
+
+# List all categories total
+mot <- mot |>
+  rowwise() |>
+  mutate(`Total List` = list(c(`2000`, `2005`, `2010`, `2015`, `2020`))) |>
+  ungroup()
+
+
+# Print the result
+print(mot)
+
+```
+
+# Add percentage for Total
+```{r}
+# Calculate the percentage increase from 2000 to 2020
+mot <- mot |>
+  rowwise() |>
+  mutate(`%` = ifelse(!is.na(`2000`), ((`2020` - `2000`) / `2000`) * 100, NA)) |>
+  ungroup()
+
+# Alter percentage to 2 decimal places
+mot <- mot |>
+  mutate(`%` = round(`%`, 2))
+
+# Print the result
+print(mot)
+
+```
+
 
 # Add stubble based on Public/Private
 ```{r}
@@ -309,6 +363,10 @@ mot <- mot |>
   tab_options(quarto.disable_processing = TRUE)
 mot
 ```
+
+
+
+
 
 # Plot the data in a table with sparkline
 
