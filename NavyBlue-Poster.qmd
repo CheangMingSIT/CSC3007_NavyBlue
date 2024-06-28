@@ -69,30 +69,14 @@ include_graphics("images/transport_graph.png")
 ```
 
 # Suggested Improvements
+1. *Use sparkline* to show the change over the years.
 
-1.  *Add a plot title and a source note* so that the figure can be
-    understood in isolation (e.g., when shared on social media).
-2.  *Identify missing data clearly.* Rendering unknown incidence fully
-    transparent will distinguish it from zero incidence,
-3.  *Include labels for every state.* To avoid overplotting, use
-    two-letter abbreviations instead of full state names and stagger the
-    labels along the y-axis.
-4.  *Add a title to the color legend.*
-5.  *Avoid using a rainbow color palette.* It lacks a meaningful
-    progression through color space and is not colorblind-friendly.
-    Consider using a sequential ColorBrewer palette instead.[^5]
-6.  *Use a discrete color palette.* Continuous palettes can make it
-    challenging for humans to detect patterns below just noticeable
-    color differences.
-7.  *Apply a logarithmic color scale* because most data are below the
-    mean incidence.
-8.  *Add grid lines* in ten-year intervals along the x-axis and for
-    every second state along the y-axis. Grid lines will aid in
-    identifying states and years in the middle of the plot, even without
-    the infotip.
-9.  Because there are more missing data on the right side of the plot,
-    *shifting y-axis labels to the right* will improve visually matching
-    states with corresponding grid lines.
+2. *Include a column* for percentage increase or decrease.
+
+3. *Use color* to show the percentage increase or decrease.
+
+4. *Group the data* into public, private and others respectively. 
+
 
 [^5]: <https://colorbrewer2.org/#type=sequential&scheme=Reds&n=5>
 
@@ -100,13 +84,8 @@ include_graphics("images/transport_graph.png")
 
 ## Data
 
--   Data was collected from 2000 to 2020 at 5-Year intervals from the Department of Statistics Singapore.[^6] Some data were obmitted and combined during the cleaning process.The data includes rows that are not present in the entire dataset for certain years. Therefore, rows that are not in common throughout the dataset were removed.
-
--
-    in @fig-wsj-on-poster, potentially underestimating the annual total.
-    Instead, we calculated the weekly mean case count on the basis of
-    non-missing data only.
--   Decennial U.S. census data for each state.[^7]
+-   Data was collected from 2000 to 2020 at 5-Year intervals from the Department of Statistics Singapore.[^6] Some data were omitted and combined during the cleaning process.The data includes rows that are not present in the entire dataset for certain years. Therefore, rows that are not in common throughout the dataset were removed.
+-  
 
 [^6]: <https://doi.org/10.25337/T7/ptycho.v2.0/US.14189004>
 
