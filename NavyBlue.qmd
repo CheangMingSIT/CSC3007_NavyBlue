@@ -17,6 +17,7 @@ library(dplyr)
 library(gt)
 library(svglite)
 library(posterdown)
+library(scales)
 ```
 
 ## Import Data
@@ -358,6 +359,31 @@ mot <- mot |>
 
 # Print the result
 print(mot)
+
+```
+
+# Implement thousands seperator
+```{r}
+#| label: Implement thousands seperator
+
+# Define a custom function to format numbers
+format_numbers <- function(x) {
+  if (!is.na(x) && x >= 1000) {
+    formatted <- formatC(x / 1000, format = "f", digits = 2, big.mark = ",")
+    paste0(formatted, "k")
+  } else if (!is.na(x)) {
+    formatC(x, format = "f", digits = 0, big.mark = ",")
+  } else {
+    NA
+  }
+}
+
+# Assuming mot is your dataframe
+mot <- mot |>
+  mutate(
+    `2000` = sapply(`2000`, format_numbers),
+    `2020` = sapply(`2020`, format_numbers)
+  )
 
 ```
 
