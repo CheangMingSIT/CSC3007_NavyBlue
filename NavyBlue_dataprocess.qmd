@@ -171,7 +171,7 @@ mot2020 <- mot2020 |> select(1, 2)
 The dataset available to download is only the thousands as compared to the other dataset which are in number therefore we need to multiply the 2015 dataset by 1000 to match the other datasets
 ```{r}
 #| label: Fix dataset for 2015
-#| echo: false
+#| results: 'hide'
 
 # Multiply the 2015 data set by 1000 (as data set is in thousands from original data set)
 mot2015 <- mot2015 |> mutate(Total = as.numeric(gsub(",", "", Total)) * 1000)
