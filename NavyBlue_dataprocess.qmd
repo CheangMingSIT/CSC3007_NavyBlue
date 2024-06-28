@@ -10,7 +10,7 @@ Import Library required by this Quarto Document
 ```{r}
 #| label: Library Imports required by this Quarto Document
 #| warning: false
-#| echo: false
+#| results: 'hide'
 # Loading all packages
 library(tidyverse)
 library(dplyr)
@@ -23,7 +23,7 @@ Functions required to run this quarto document will be created here in a single 
 ```{r}
 #| label: Functions Definition
 #| warning: false
-#| echo: false
+#| results: 'hide'
 
 # Min Max normalisation function
 min_max_normalise <- function(x) {
@@ -93,7 +93,8 @@ Initial import of data file to this quarto document (Data files will be removed 
 ```{r}
 #| label: Load all datasets
 #| message: false
-#| echo: false
+#| results: 'hide'
+
 # Read all csv into data frames and skipping the first 11 rows and reading the next 15 rows
 mot2000 <- read.csv("mode_of_transport_2000.csv", skip = 11, nrow = 15)
 mot2005 <- read.csv("mode_of_transport_2005.csv", skip = 11, nrow = 15)
@@ -120,7 +121,8 @@ mot2020 <- mot2020 |> mutate(across(where(is.character), trimws))
 2020 dataset was not formatted properly in the original excel. We will format it here to match the excel for the other years
 ```{r}
 #| label: Reformatting 2020 Dataset
-#| echo: false
+#| results: 'hide'
+
 # Replace column names that start with 'X' followed by digits with values from the first row
 new_names <- ifelse(grepl("^X\\.\\d+$", names(mot2020)), mot2020[1, which(grepl("^X\\.\\d+$", names(mot2020)))], names(mot2020))
 
@@ -141,7 +143,7 @@ rm(new_names)
 The original file does not have a correct stubhead therefore we will rename the stubhead to 'Categories'
 ```{r}
 #| label: Renaming stubhead to Categories
-#| echo: false
+#| results: 'hide'
 
 # Rename the first column to 'Categories'
 colnames(mot2000)[which(names(mot2000) == "X")] <- "Categories"
@@ -155,7 +157,7 @@ colnames(mot2020)[which(names(mot2020) == "X")] <- "Categories"
 The only information that we require to build the table is only the categories and the total
 ```{r}
 #| label: Select the stubhead column and the Total
-#| message: FALSE
+#| results: 'hide'
 
 # Select the stubhead column and the Total
 mot2000 <- mot2000 |> select(1, 2)
@@ -179,7 +181,7 @@ mot2015 <- mot2015 |> mutate(Total = as.numeric(gsub(",", "", Total)) * 1000)
 The 2000 and 2005 dataset has 2 row called "Others" which is not present in the other datasets. We will combine the "Others" row into a single row.
 ```{r}
 #| label: Combining "Others" row in 2000 and 2005
-#| echo: false
+#| results: 'hide'
 
 # Group all categories together and sum the total of similar categories
 mot2000 <- mot2000 |>
@@ -194,7 +196,7 @@ mot2005 <- mot2005 |>
 The 2020 dataset has some categories that are not present in the other datasets. We will rename these categories to match the other datasets
 ```{r}
 #| label: Rename some columns of dataset from 2020 to match other years
-#| echo: false
+#| results: 'hide'
 
 # Using mutate and recode to rename rows
 mot2020 <- mot2020 |> mutate(Categories = recode(Categories,
@@ -207,7 +209,7 @@ mot2020 <- mot2020 |> mutate(Categories = recode(Categories,
 Throughout the years, there are some categories that are not present in all the datasets. We will remove these categories from the dataset. We will also be removing the total as it will not be accurate anymore.
 ```{r}
 #| label: Removing categories that not all tables contain
-#| echo: false
+#| results: 'hide'
 
 # Categories to filter out
 categories_to_remove <- c("One Mode Of Transport", "Two Or More Modes Of Transport", "MRT & Car Only", "MRT & Another Mode", "Other Combinations Of MRT Or Public Bus", "Other combinations of MRT/LRT or Public Bus", "Total")
@@ -227,7 +229,7 @@ rm(categories_to_remove)
 This is a pre-process required to display the gt table later
 ```{r}
 #| label: Arrange MRT & Public Bus Only row to the first row
-#| echo: false
+#| results: 'hide'
 
 # Define the custom order
 custom_order <- c("MRT & Public Bus Only", "MRT Only", "Public Bus Only", 
@@ -250,7 +252,7 @@ rm(custom_order)
 We will use this to group transport categories into public and private transport
 ```{r}
 #| label: Add new column to classify categories as either public or private transport
-#| echo: false
+#| results: 'hide'
 
 # Add new column to classify categories as either public or private transport
 mot2000 <- categorize_transport(mot2000, "Categories", "Public/Private")
@@ -264,7 +266,7 @@ mot2020 <- categorize_transport(mot2020, "Categories", "Public/Private")
 We will add a new row to the dataset to show the total for public, private and other transport
 ```{r}
 #| label: Add total for public and private
-#| echo: false
+#| results: 'hide'
 
 # Add total for public and private
 mot2000 <- add_category_totals(mot2000, "Categories", "Total", "Public/Private")
@@ -278,7 +280,7 @@ mot2020 <- add_category_totals(mot2020, "Categories", "Total", "Public/Private")
 We will rename the Total column to the year to make it easier to identify the year
 ```{r}
 #| label: Renaming the Total col to the year
-#| echo: false
+#| results: 'hide'
 
 # Renaming the Total col to the year
 mot2000 <- mot2000 |> rename(`2000` = Total)
@@ -292,7 +294,7 @@ mot2020 <- mot2020 |> rename(`2020` = Total)
 We will join all the datasets into a single dataset to make it easier to display the data
 ```{r}
 #| label: Join the datasets to one single dataset
-#| echo: false
+#| results: 'hide'
 
 # List of datasets to join
 datasets <- list(mot2000, mot2005, mot2010, mot2015, mot2020)  # Add all your datasets here
@@ -308,7 +310,7 @@ rm(datasets)
 The data is required to be normalized to create a better sparkline
 ```{r}
 #| label: Normalising data for each year
-#| echo: false
+#| results: 'hide'
 
 # pivot_longer to convert the data frame to long format
 mot_normalized <- mot |>
@@ -333,7 +335,7 @@ mot_normalized <- mot_normalized |>
 This is to show the change of usage from year 2000 to 2020
 ```{r}
 #| label: Add percentage change to mot
-#| echo: false
+#| results: 'hide'
 
 # Calculate the percentage change from 2000 to 2020
 mot <- mot |>
@@ -346,6 +348,7 @@ mot <- mot |>
 # Hide Columns 2005, 2010 and 2015
 ```{r}
 #| label: Hide Columns 2005, 2010 and 2015
+#| results: 'hide'
 
 mot <- mot |>
   select(Categories, `2000`, `2020`, `%`, `Public/Private`)
@@ -354,7 +357,7 @@ mot <- mot |>
 # Add thousand formatting for 2000 and 2020
 ```{r}
 #| label: Add thousand formatting for 2000 and 2020
-#| echo: false
+#| results: 'hide'
 
 # Apply custom formatting to the 2000 and 2020 columns
 mot <- mot |>
@@ -366,7 +369,7 @@ mot <- mot |>
 Join sparkline data back to combined dataset and delete mot_normalized
 ```{r}
 #| label: Add back the sparkline col from mot_normalized
-#| echo: false
+#| results: 'hide'
 
 # Add back the sparkline col from mot_normalized
 mot <- mot |>
@@ -380,7 +383,7 @@ rm(mot_normalized)
 Rearrange the mot dataset by Public/Private to match sparkline implementation
 ```{r}
 #| label: Rearrage the mot dataset by Public/Private
-#| echo: false
+#| results: 'hide'
 
 # Rearrage the mot dataset by Public/Private
 mot <- shift_columns(mot, "Public/Private", c("Public", "Private", "Others"))
@@ -390,7 +393,6 @@ mot <- shift_columns(mot, "Public/Private", c("Public", "Private", "Others"))
 Create a GT table to display the data, adding stubble based on the Public/Private column
 ```{r}
 #| label: Create a GT table to display the mot data
-#| echo: false
 
 # Create a GT table to display the mot data
 gt_table <- mot |>
