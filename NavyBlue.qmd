@@ -327,11 +327,22 @@ mot <- mot |>
   mutate(`Total List` = list(c(`2000`, `2005`, `2010`, `2015`, `2020`))) |>
   ungroup()
 
-
 # Print the result
 print(mot)
 
 ```
+
+
+# Hide Columns 2005, 2010 and 2015
+```{r}
+#| label: Hide Columns 2005, 2010 and 2015
+
+mot <- mot %>%
+  select(Categories, `2000`, `2020`, `%`, `Public/Private`, `Total List`)
+```
+
+
+
 
 # Add percentage for Total
 ```{r}
@@ -384,6 +395,7 @@ mot <- mot |>
                              palette = c("black", "black", "red", "green", "grey"))
 mot
 ```
+
 
 # Alter % increase colors
 ```{r}
