@@ -1,0 +1,439 @@
+---
+title: "NavyBlue"
+author: "Cheang Ming, Nasruddine, Walter, Calvert, Chrystal, Xian Hao"
+format: html
+editor: source
+---
+
+# Library Imports
+Import Library required by this Quarto Document
+```{r}
+#| label: Library Imports required by this Quarto Document
+#| warning: false
+#| echo: false
+# Loading all packages
+library(tidyverse)
+library(dplyr)
+library(gt)
+library(scales)
+```
+
+# Functions Definition
+Functions required to run this quarto document will be created here in a single chunk to allow for easier management of helper functions
+```{r}
+#| label: Functions Definition
+#| warning: false
+#| echo: false
+
+# Min Max normalisation function
+min_max_normalise <- function(x) {
+  (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+}
+
+# Define a custom function to format numbers
+custom_thousand_format <- function(x, decimalPoint=0.001, dividedBy=1000) {
+  scales::number_format(accuracy = decimalPoint, big.mark = ",", suffix = "k")(x / dividedBy)
+}
+
+# Function to shift row data around
+shift_columns <- function(data, column_name, custom_order) {
+  data <- data |>
+    rowwise() |>
+    mutate(!!sym(column_name) := factor(!!sym(column_name), levels = custom_order)) |>
+    arrange(!!sym(column_name))
+  
+  return(data)
+}
+
+# Function to group transport under a new column name
+categorize_transport <- function(data, category_column, new_column) {
+  data <- data |>
+    mutate(!!sym(new_column) := case_when(
+      !!sym(category_column) %in% c("MRT & Public Bus Only", "MRT Only", "Public Bus Only") ~ "Public",
+      !!sym(category_column) %in% c("Private Chartered Bus/Van Only", "Taxi Only", "Car Only", "Lorry/Pickup Only", "Motorcycle/Scooter Only") ~ "Private",
+      !!sym(category_column) %in% c("No Transport Required", "Others") ~ "Others",
+      TRUE ~ "Total"
+    ))
+  
+  return(data)
+}
+
+# Combines and sums the total of each grouped category
+add_category_totals <- function(data, category_column, total_column, new_column) {
+  # Group by the new column and calculate the totals
+  totals_df <- data %>%
+    group_by(!!sym(new_column)) %>%
+    summarise(total = sum(!!sym(total_column), na.rm = TRUE)) %>%
+    ungroup() %>%
+    mutate(Categories = paste(!!sym(new_column), "Total")) %>%
+    rename(Total = total)
+  
+  # Select relevant columns for binding
+  totals_df <- totals_df %>%
+    select(Categories, Total, !!sym(new_column))
+  
+  # Bind the totals to the original dataframe
+  data <- bind_rows(data, totals_df)
+  
+  return(data)
+}
+
+# Function to join two datasets and remove duplicate columns
+safe_full_join <- function(df1, df2, by) {
+  common_cols <- intersect(names(df1), names(df2))
+  common_cols <- setdiff(common_cols, by) # Exclude the joining column(s)
+  
+  df1 <- df1 %>% select(-all_of(common_cols))
+  full_join(df1, df2, by = by)
+}
+```
+
+# Import the data from excel file
+Initial import of data file to this quarto document (Data files will be removed upon completion of sparkline table)
+```{r}
+#| label: Load all datasets
+#| message: false
+#| echo: false
+# Read all csv into data frames and skipping the first 11 rows and reading the next 15 rows
+mot2000 <- read.csv("mode_of_transport_2000.csv", skip = 11, nrow = 15)
+mot2005 <- read.csv("mode_of_transport_2005.csv", skip = 11, nrow = 15)
+mot2010 <- read.csv("mode_of_transport_2010.csv", skip = 11, nrow = 13)
+mot2015 <- read.csv("mode_of_transport_2015.csv", skip = 11, nrow = 12)
+mot2020 <- read.csv("mode_of_transport_2020.csv", skip = 11, nrow = 13)
+
+# Trim all categories
+colnames(mot2000) <- trimws(colnames(mot2000))
+colnames(mot2005) <- trimws(colnames(mot2005))
+colnames(mot2010) <- trimws(colnames(mot2010))
+colnames(mot2015) <- trimws(colnames(mot2015))
+colnames(mot2020) <- trimws(colnames(mot2020))
+
+# Trim white space from all character columns
+mot2000 <- mot2000 |> mutate(across(where(is.character), trimws))
+mot2005 <- mot2005 |> mutate(across(where(is.character), trimws))
+mot2010 <- mot2010 |> mutate(across(where(is.character), trimws))
+mot2015 <- mot2015 |> mutate(across(where(is.character), trimws))
+mot2020 <- mot2020 |> mutate(across(where(is.character), trimws))
+```
+
+# Reformatting 2020 Dataset
+2020 dataset was not formatted properly in the original excel. We will format it here to match the excel for the other years
+```{r}
+#| label: Reformatting 2020 Dataset
+#| echo: false
+# Replace column names that start with 'X' followed by digits with values from the first row
+new_names <- ifelse(grepl("^X\\.\\d+$", names(mot2020)), mot2020[1, which(grepl("^X\\.\\d+$", names(mot2020)))], names(mot2020))
+
+# Set the new column names
+names(mot2020) <- new_names
+
+# Remove the first row used as headers
+mot2020 <- mot2020[-1, ]
+
+# Reset the index for the dataframe
+row.names(mot2020) <- NULL
+
+# Remove new_names
+rm(new_names)
+```
+
+# Renaming 'X' to Categories
+The original file does not have a correct stubhead therefore we will rename the stubhead to 'Categories'
+```{r}
+#| label: Renaming stubhead to Categories
+#| echo: false
+
+# Rename the first column to 'Categories'
+colnames(mot2000)[which(names(mot2000) == "X")] <- "Categories"
+colnames(mot2005)[which(names(mot2005) == "X")] <- "Categories"
+colnames(mot2010)[which(names(mot2010) == "X")] <- "Categories"
+colnames(mot2015)[which(names(mot2015) == "X")] <- "Categories"
+colnames(mot2020)[which(names(mot2020) == "X")] <- "Categories"
+```
+
+# Select the stubhead column and the Total
+The only information that we require to build the table is only the categories and the total
+```{r}
+#| label: Select the stubhead column and the Total
+#| message: FALSE
+
+# Select the stubhead column and the Total
+mot2000 <- mot2000 |> select(1, 2)
+mot2005 <- mot2005 |> select(1, 2)
+mot2010 <- mot2010 |> select(1, 2)
+mot2015 <- mot2015 |> select(1, 2)
+mot2020 <- mot2020 |> select(1, 2)
+```
+
+# Fix dataset for 2015 as the data is representing thousands
+The dataset available to download is only the thousands as compared to the other dataset which are in number therefore we need to multiply the 2015 dataset by 1000 to match the other datasets
+```{r}
+#| label: Fix dataset for 2015
+#| echo: false
+
+# Multiply the 2015 data set by 1000 (as data set is in thousands from original data set)
+mot2015 <- mot2015 |> mutate(Total = as.numeric(gsub(",", "", Total)) * 1000)
+```
+
+# Combining "Others" row in 2000 and 2005
+The 2000 and 2005 dataset has 2 row called "Others" which is not present in the other datasets. We will combine the "Others" row into a single row.
+```{r}
+#| label: Combining "Others" row in 2000 and 2005
+#| echo: false
+
+# Group all categories together and sum the total of similar categories
+mot2000 <- mot2000 |>
+  group_by(Categories) |>
+  summarise(Total = sum(Total))
+mot2005 <- mot2005 |>
+  group_by(Categories) |>
+  summarise(Total = sum(Total))
+```
+
+# Rename some columns of dataset from 2020 to match other years
+The 2020 dataset has some categories that are not present in the other datasets. We will rename these categories to match the other datasets
+```{r}
+#| label: Rename some columns of dataset from 2020 to match other years
+#| echo: false
+
+# Using mutate and recode to rename rows
+mot2020 <- mot2020 |> mutate(Categories = recode(Categories,
+                                                 "MRT/LRT Only" = "MRT Only",
+                                                 "MRT/LRT & Public Bus Only" = "MRT & Public Bus Only",
+                                                 "Taxi/Private Hire Car Only" = "Taxi Only"))
+```
+
+# Removing categories that not all tables contain
+Throughout the years, there are some categories that are not present in all the datasets. We will remove these categories from the dataset. We will also be removing the total as it will not be accurate anymore.
+```{r}
+#| label: Removing categories that not all tables contain
+#| echo: false
+
+# Categories to filter out
+categories_to_remove <- c("One Mode Of Transport", "Two Or More Modes Of Transport", "MRT & Car Only", "MRT & Another Mode", "Other Combinations Of MRT Or Public Bus", "Other combinations of MRT/LRT or Public Bus", "Total")
+
+# Use filter to drop rows based on finalized table
+mot2000 <- mot2000 |> filter(!Categories %in% categories_to_remove)
+mot2005 <- mot2005 |> filter(!Categories %in% categories_to_remove)
+mot2010 <- mot2010 |> filter(!Categories %in% categories_to_remove)
+mot2015 <- mot2015 |> filter(!Categories %in% categories_to_remove)
+mot2020 <- mot2020 |> filter(!Categories %in% categories_to_remove)
+
+# Remove categories_to_remove
+rm(categories_to_remove)
+```
+
+# Arrange by Public and Private Transport
+This is a pre-process required to display the gt table later
+```{r}
+#| label: Arrange MRT & Public Bus Only row to the first row
+#| echo: false
+
+# Define the custom order
+custom_order <- c("MRT & Public Bus Only", "MRT Only", "Public Bus Only", 
+                  "Private Chartered Bus/Van Only", "Taxi Only", "Car Only", 
+                  "Lorry/Pickup Only", "Motorcycle/Scooter Only", 
+                  "No Transport Required", "Others")
+
+# Arrange MRT & Public Bus Only row to the first row
+mot2000 <- shift_columns(mot2000, "Categories", custom_order)
+mot2005 <- shift_columns(mot2005, "Categories", custom_order)
+mot2010 <- shift_columns(mot2010, "Categories", custom_order)
+mot2015 <- shift_columns(mot2015, "Categories", custom_order)
+mot2020 <- shift_columns(mot2020, "Categories", custom_order)
+
+# Remove custom_order
+rm(custom_order)
+```
+
+# Add new column to classify categories as either public or private transport
+We will use this to group transport categories into public and private transport
+```{r}
+#| label: Add new column to classify categories as either public or private transport
+#| echo: false
+
+# Add new column to classify categories as either public or private transport
+mot2000 <- categorize_transport(mot2000, "Categories", "Public/Private")
+mot2005 <- categorize_transport(mot2005, "Categories", "Public/Private")
+mot2010 <- categorize_transport(mot2010, "Categories", "Public/Private")
+mot2015 <- categorize_transport(mot2015, "Categories", "Public/Private")
+mot2020 <- categorize_transport(mot2020, "Categories", "Public/Private")
+```
+
+# Finding "Total" value for public, private and other transport
+We will add a new row to the dataset to show the total for public, private and other transport
+```{r}
+#| label: Add total for public and private
+#| echo: false
+
+# Add total for public and private
+mot2000 <- add_category_totals(mot2000, "Categories", "Total", "Public/Private")
+mot2005 <- add_category_totals(mot2005, "Categories", "Total", "Public/Private")
+mot2010 <- add_category_totals(mot2010, "Categories", "Total", "Public/Private")
+mot2015 <- add_category_totals(mot2015, "Categories", "Total", "Public/Private")
+mot2020 <- add_category_totals(mot2020, "Categories", "Total", "Public/Private")
+```
+
+# Renaming the Total col to the year
+We will rename the Total column to the year to make it easier to identify the year
+```{r}
+#| label: Renaming the Total col to the year
+#| echo: false
+
+# Renaming the Total col to the year
+mot2000 <- mot2000 |> rename(`2000` = Total)
+mot2005 <- mot2005 |> rename(`2005` = Total)
+mot2010 <- mot2010 |> rename(`2010` = Total)
+mot2015 <- mot2015 |> rename(`2015` = Total)
+mot2020 <- mot2020 |> rename(`2020` = Total)
+```
+
+# Join the datasets to one single dataset
+We will join all the datasets into a single dataset to make it easier to display the data
+```{r}
+#| label: Join the datasets to one single dataset
+#| echo: false
+
+# List of datasets to join
+datasets <- list(mot2000, mot2005, mot2010, mot2015, mot2020)  # Add all your datasets here
+
+# Assuming "Categories" is the common column to join by
+mot <- Reduce(function(x, y) safe_full_join(x, y, by = "Categories"), datasets)
+
+# Remove datasets
+rm(datasets)
+```
+
+# Normalising data for each year
+The data is required to be normalized to create a better sparkline
+```{r}
+#| label: Normalising data for each year
+#| echo: false
+
+# pivot_longer to convert the data frame to long format
+mot_normalized <- mot |>
+  pivot_longer(cols = `2000`:`2020`, names_to = "Year", values_to = "Value") |>
+  select(-Year)
+
+# Drop public/private column
+mot_normalized <- mot_normalized |> select(-`Public/Private`)
+
+# Apply min-max normalization to each category
+mot_normalized <- mot_normalized |>
+  group_by(Categories) |>
+  mutate(across(`Value`, min_max_normalise))
+
+mot_normalized <- mot_normalized |>
+  group_by(Categories) |>
+  summarize(`Sparkline` = list(Value), .groups = "drop")
+
+```
+
+# Add percentage change to mot
+This is to show the change of usage from year 2000 to 2020
+```{r}
+#| label: Add percentage change to mot
+#| echo: false
+
+# Calculate the percentage change from 2000 to 2020
+mot <- mot |>
+  rowwise() |>
+  mutate(`%` = ((`2020` - `2000`) / `2000`) * 100) |>
+  ungroup() |>
+  mutate(`%` = round(`%`, 2))
+```
+
+# Hide Columns 2005, 2010 and 2015
+```{r}
+#| label: Hide Columns 2005, 2010 and 2015
+
+mot <- mot |>
+  select(Categories, `2000`, `2020`, `%`, `Public/Private`)
+```
+
+# Add thousand formatting for 2000 and 2020
+```{r}
+#| label: Add thousand formatting for 2000 and 2020
+#| echo: false
+
+# Apply custom formatting to the 2000 and 2020 columns
+mot <- mot |>
+  mutate(`2000` = custom_thousand_format(`2000`, decimalPoint = 0.01),
+         `2020` = custom_thousand_format(`2020`, decimalPoint = 0.01))
+```
+
+# Add back the sparkline col from mot_normalized
+Join sparkline data back to combined dataset and delete mot_normalized
+```{r}
+#| label: Add back the sparkline col from mot_normalized
+#| echo: false
+
+# Add back the sparkline col from mot_normalized
+mot <- mot |>
+  left_join(mot_normalized, by = "Categories")
+
+# Remove mot_normalized
+rm(mot_normalized)
+```
+
+# Rearrage the mot dataset by Public/Private
+Rearrange the mot dataset by Public/Private to match sparkline implementation
+```{r}
+#| label: Rearrage the mot dataset by Public/Private
+#| echo: false
+
+# Rearrage the mot dataset by Public/Private
+mot <- shift_columns(mot, "Public/Private", c("Public", "Private", "Others"))
+```
+
+# Create a GT table to display the mot data
+Create a GT table to display the data, adding stubble based on the Public/Private column
+```{r}
+#| label: Create a GT table to display the mot data
+#| echo: false
+
+# Create a GT table to display the mot data
+gt_table <- mot |>
+  select(-`2000`, -`2020`) |>
+  # Add stubble based on the Public/Private column
+  gt(
+    groupname_col = 'Public/Private'
+  ) |>
+  tab_options(quarto.disable_processing = TRUE) |>
+
+  # Color the % column based on positive or negative values
+  gt::tab_style(
+    style = gt::cell_text(color = "forestgreen"),
+    locations = gt::cells_body(columns = `%`,
+                                rows = `%` > 0)) |>
+  gt::tab_style(
+    style = gt::cell_text(color = "red"),
+    locations = gt::cells_body(columns = `%`,
+                                rows = `%` < 0)) |>
+  cols_label(`%` = "Change (%)") |>
+
+  # Add sparkline to the table
+  gtExtras::gt_plt_sparkline(column = `Sparkline`,
+                             fig_dim = c(5, 20),
+                             type = "shaded",
+                             palette = c("black", "black", "red", "green", "grey"),
+                             label = FALSE) |>
+
+  # Text transform for adding the start and end year to the sparkline plot
+  text_transform(
+    locations = cells_body(columns = `Sparkline`),
+    fn = function(x, row) {
+      x <- paste0(mot$`2000`[row] ,x, mot$`2020`[row])
+      x
+    }
+  )
+
+# Remove all dataset to free up memory
+rm(mot2000)
+rm(mot2005)
+rm(mot2010)
+rm(mot2015)
+rm(mot2020)
+
+gt_table
+```
