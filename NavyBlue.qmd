@@ -309,7 +309,7 @@ mot <- mot |>
 # Calculate totals for Public and Private transport for each year
 public_private_totals <- mot |>
   group_by(`Public/Private`) |>
-  summarise(across(`2000`:`2020`, sum, na.rm = TRUE), .groups = 'drop') |>
+  summarise(across(`2000`:`2020`,  ~sum(.x, na.rm = TRUE)), .groups = 'drop') |>
   mutate(Categories = `Public/Private`,
          `%` = NA, # Add NA for % column
          `Public/Private` = `Public/Private`,
@@ -329,77 +329,8 @@ mot <- mot |>
 
 
 # Print the result
-print(mot)
-
-```
-
-# Add percentage for Total
-```{r}
-# Calculate the percentage increase from 2000 to 2020
-mot <- mot |>
-  rowwise() |>
-  mutate(`%` = ifelse(!is.na(`2000`), ((`2020` - `2000`) / `2000`) * 100, NA)) |>
-  ungroup()
-
-# Alter percentage to 2 decimal places
-mot <- mot |>
-  mutate(`%` = round(`%`, 2))
-
-# Print the result
-print(mot)
-
-```
-
-
-# Add stubble based on Public/Private
-```{r}
-#| label: Add stubble based on Public/Private
-
-# Add stubble based on Public/Private
-mot <- mot |>
-  gt(
-    groupname_col = 'Public/Private'
-  ) |>
-  tab_options(quarto.disable_processing = TRUE)
 mot
 ```
 
 
 
-
-
-# Plot the data in a table with sparkline
-
-```{r}
-#| label: Plot the data in a table with sparkline
-#| message: FALSE
-#| warning: FALSE
-
-# Plot the data in a table with sparkline and adjust colors for % increase
-
-mot <- mot |>
-  gtExtras::gt_plt_sparkline(column = `Total List`,
-                             fig_dim = c(20,55),
-                             type = "ref_last",
-                             palette = c("black", "black", "red", "green", "grey"))
-mot
-```
-
-# Alter % increase colors
-```{r}
-#| label: Alter % increase colors
-#| message: FALSE
-#| warning: FALSE
-
-# Alter % increase colors
-mot <- mot |>
-  gt::tab_style(
-    style = gt::cell_text(color = "forestgreen"),
-    locations = gt::cells_body(columns = `%`,
-                                rows = `%` > 0)) |>
-  gt::tab_style(
-    style = gt::cell_text(color = "red"),
-    locations = gt::cells_body(columns = `%`,
-                                rows = `%` < 0))
-mot
-```
