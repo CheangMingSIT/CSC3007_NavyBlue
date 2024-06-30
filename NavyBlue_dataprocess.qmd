@@ -343,6 +343,8 @@ mot <- mot |>
   mutate(`%` = ((`2020` - `2000`) / `2000`) * 100) |>
   ungroup() |>
   mutate(`%` = round(`%`, 2))
+
+mot
 ```
 
 # Hide Columns 2005, 2010 and 2015
@@ -352,6 +354,8 @@ mot <- mot |>
 
 mot <- mot |>
   select(Categories, `2000`, `2020`, `%`, `Public/Private`)
+
+mot
 ```
 
 # Add thousand formatting for 2000 and 2020
@@ -363,6 +367,8 @@ mot <- mot |>
 mot <- mot |>
   mutate(`2000` = custom_thousand_format(`2000`, decimalPoint = 0.01),
          `2020` = custom_thousand_format(`2020`, decimalPoint = 0.01))
+
+mot
 ```
 
 # Add back the sparkline col from mot_normalized
@@ -377,6 +383,8 @@ mot <- mot |>
 
 # Remove mot_normalized
 rm(mot_normalized)
+
+mot
 ```
 
 # Rearrage the mot dataset by Public/Private
@@ -387,6 +395,9 @@ Rearrange the mot dataset by Public/Private to match sparkline implementation
 
 # Rearrage the mot dataset by Public/Private
 mot <- shift_columns(mot, "Public/Private", c("Public", "Private", "Others"))
+
+mot
+
 ```
 
 # Create a GT table to display the mot data
@@ -436,6 +447,177 @@ rm(mot2005)
 rm(mot2010)
 rm(mot2015)
 rm(mot2020)
+
+gt_table
+```
+# Add Header and Subtitle
+
+```{r}
+#| label: Add Header title and subtitle
+
+gt_table <- 
+  gt_table |>
+  tab_header(
+    title = "Percentage Change in Modes of Transport to Work for Residents Aged 15 and Above",
+    subtitle = "in percentage 2000 - 2020"
+  ) |>
+  tab_style(
+    list(
+      cell_fill(color = "#4D869C"),
+      cell_text( weight = 700, color = "white"),
+      cell_borders(
+        sides = "top",
+        color = "black",
+        weight = px(3)
+    )),
+    locations = cells_title(groups = "title")
+  ) |>
+   tab_style(
+    list(
+      cell_fill(color = "#4D869C"),
+      cell_text( weight = 300, color = "white"),
+        cell_borders(
+        sides = "bottom",
+        color = "black",
+        weight = px(3)
+    )),
+    locations = cells_title(groups = "subtitle")
+  ) |>
+  tab_options(quarto.disable_processing = TRUE)
+
+gt_table
+```
+
+# Add Column Spanner Labels
+
+```{r}
+gt_table <- 
+  tab_spanner(
+    gt_table,
+    label = "Change and Trends",
+    id = "changer",
+    columns = c(`%`, `Sparkline`)
+  ) |>
+ tab_style(
+    style = list(
+      cell_text(weight = 500, size = px(14))
+    ),
+    locations = cells_column_spanners() 
+  ) |>
+  tab_options(quarto.disable_processing = TRUE)
+
+gt_table
+```
+
+# Change the border style
+
+```{r}
+gt_table <- gt_table |>
+  tab_style(
+    list(
+      cell_fill(
+        color = "#CDE8E5",
+      ),
+      cell_borders(
+        sides = c("top", "bottom"),
+        color = "black",
+        weight = px(3)
+      ),
+      cell_text(
+        weight = 600,
+        size = px(14),
+        font = "Helvetica"
+      )
+    ),
+    locations = cells_row_groups()
+  ) |>
+  tab_options(quarto.disable_processing = TRUE)
+
+gt_table
+```
+
+# Change column header style
+
+```{r}
+gt_table <- gt_table |>
+  tab_style(
+    style = list(
+      cell_text(weight = 700, size = px(18))  # Correctly include size within cell_text
+    ),
+    locations = cells_column_labels()
+  ) |>
+  tab_options(quarto.disable_processing = TRUE)
+
+gt_table
+```
+
+# set public, private, other total with style
+
+```{r}
+gt_table <- gt_table |>
+  tab_style(
+    style = list(
+      cell_fill(color = "#EEF7FF"),
+      cell_text(weight = 600),
+      cell_borders(
+        sides = "top",
+        style = "double",
+      )
+    ),
+    locations = cells_body(
+      rows = c(4, 10, 13)  # Assuming the first three rows are summary rows
+    )
+  ) |>
+  tab_options(quarto.disable_processing = TRUE)
+
+gt_table
+```
+
+# add border right on the stub
+
+```{r}
+gt_table <- gt_table |>
+  tab_style(
+    style = list(
+      cell_borders(
+        sides = "right"
+      )
+    ),
+    locations =  cells_body(
+      columns = 1
+    )
+  ) |>
+  tab_options(quarto.disable_processing = TRUE)
+
+gt_table
+```
+
+# Add source note to the table
+
+```{r}
+gt_table <- gt_table |>
+  tab_source_note(
+    source_note = "Source: Department of Statistics, Singapore"
+  ) |>
+  tab_style(
+    list(
+      cell_text(
+        size = px(12),
+        font = "Helvetica",
+        color = "white"
+      ),
+      cell_fill(
+        color = "#4D869C"
+      ),
+      cell_borders(
+        sides = c("top", "bottom"),
+        color = "black",
+        weight = px(3)
+      )
+    ),
+    locations = cells_source_notes()
+  ) |>
+  tab_options(quarto.disable_processing = TRUE)
 
 gt_table
 ```
