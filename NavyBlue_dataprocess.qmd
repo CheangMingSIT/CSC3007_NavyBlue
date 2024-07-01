@@ -439,6 +439,17 @@ gt_table <- mot |>
       x <- paste0(mot$`2000`[row] ,x, mot$`2020`[row])
       x
     }
+  ) |>
+
+  # Add up and down arrows based on the % column values using HTML and remove negative signs
+  text_transform(
+    locations = cells_body(columns = `%`),
+    fn = function(x) {
+      abs_x <- abs(as.numeric(x))
+      ifelse(as.numeric(x) > 0,
+             paste0('<span style="color:forestgreen;">&#9650;</span> ', abs_x, "%"),  # HTML for upward arrow
+             paste0('<span style="color:red;">&#9660;</span> ', abs_x, "%"))  # HTML for downward arrow
+    }
   )
 
 # Remove all dataset to free up memory
