@@ -31,9 +31,14 @@ min_max_normalise <- function(x) {
 }
 
 # Define a custom function to format numbers
-custom_thousand_format <- function(x, decimalPoint = 0.001, dividedBy = 1000) {
-  scales::number_format(accuracy = decimalPoint, big.mark = ",", suffix = "k")(x / dividedBy)
-}
+custom_thousand_format <- Vectorize(function(x, decimalPoint = 0.001) {
+  if (abs(x) >= 1e6) {
+    scales::number_format(accuracy = decimalPoint, big.mark = ",", suffix = "m")(x / 1e6)
+  } else {
+    scales::number_format(accuracy = decimalPoint, big.mark = ",", suffix = "k")(x / 1e3)
+  }
+})
+
 
 # Function to shift row data around
 shift_columns <- function(data, column_name, custom_order) {
@@ -437,7 +442,7 @@ gt_table <- mot |>
     column = `Sparkline`,
     fig_dim = c(5, 20),
     type = "shaded",
-    palette = c("black", "black", "red", "green", "grey"),
+    palette = c("black", rep("transparent",3), "grey"),
     label = FALSE
   ) |>
   # Text transform for adding the start and end year to the sparkline plot
