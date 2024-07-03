@@ -31,7 +31,7 @@ min_max_normalise <- function(x) {
 }
 
 # Define a custom function to format numbers
-custom_thousand_format <- function(x, decimalPoint=0.001, dividedBy=1000) {
+custom_thousand_format <- function(x, decimalPoint = 0.001, dividedBy = 1000) {
   scales::number_format(accuracy = decimalPoint, big.mark = ",", suffix = "k")(x / dividedBy)
 }
 
@@ -41,7 +41,7 @@ shift_columns <- function(data, column_name, custom_order) {
     rowwise() |>
     mutate(!!sym(column_name) := factor(!!sym(column_name), levels = custom_order)) |>
     arrange(!!sym(column_name))
-  
+
   return(data)
 }
 
@@ -54,7 +54,7 @@ categorize_transport <- function(data, category_column, new_column) {
       !!sym(category_column) %in% c("No Transport Required", "Others") ~ "Others",
       TRUE ~ "Total"
     ))
-  
+
   return(data)
 }
 
@@ -67,14 +67,14 @@ add_category_totals <- function(data, category_column, total_column, new_column)
     ungroup() %>%
     mutate(Categories = paste(!!sym(new_column), "Total")) %>%
     rename(Total = total)
-  
+
   # Select relevant columns for binding
   totals_df <- totals_df %>%
     select(Categories, Total, !!sym(new_column))
-  
+
   # Bind the totals to the original dataframe
   data <- bind_rows(data, totals_df)
-  
+
   return(data)
 }
 
@@ -82,7 +82,7 @@ add_category_totals <- function(data, category_column, total_column, new_column)
 safe_full_join <- function(df1, df2, by) {
   common_cols <- intersect(names(df1), names(df2))
   common_cols <- setdiff(common_cols, by) # Exclude the joining column(s)
-  
+
   df1 <- df1 %>% select(-all_of(common_cols))
   full_join(df1, df2, by = by)
 }
@@ -200,9 +200,10 @@ The 2020 dataset has some categories that are not present in the other datasets.
 
 # Using mutate and recode to rename rows
 mot2020 <- mot2020 |> mutate(Categories = recode(Categories,
-                                                 "MRT/LRT Only" = "MRT Only",
-                                                 "MRT/LRT & Public Bus Only" = "MRT & Public Bus Only",
-                                                 "Taxi/Private Hire Car Only" = "Taxi Only"))
+  "MRT/LRT Only" = "MRT Only",
+  "MRT/LRT & Public Bus Only" = "MRT & Public Bus Only",
+  "Taxi/Private Hire Car Only" = "Taxi Only"
+))
 ```
 
 # Removing categories that not all tables contain
@@ -232,10 +233,12 @@ This is a pre-process required to display the gt table later
 #| results: 'hide'
 
 # Define the custom order
-custom_order <- c("MRT & Public Bus Only", "MRT Only", "Public Bus Only", 
-                  "Private Chartered Bus/Van Only", "Taxi Only", "Car Only", 
-                  "Lorry/Pickup Only", "Motorcycle/Scooter Only", 
-                  "No Transport Required", "Others")
+custom_order <- c(
+  "MRT & Public Bus Only", "MRT Only", "Public Bus Only",
+  "Private Chartered Bus/Van Only", "Taxi Only", "Car Only",
+  "Lorry/Pickup Only", "Motorcycle/Scooter Only",
+  "No Transport Required", "Others"
+)
 
 # Arrange MRT & Public Bus Only row to the first row
 mot2000 <- shift_columns(mot2000, "Categories", custom_order)
@@ -297,7 +300,7 @@ We will join all the datasets into a single dataset to make it easier to display
 #| results: 'hide'
 
 # List of datasets to join
-datasets <- list(mot2000, mot2005, mot2010, mot2015, mot2020)  # Add all your datasets here
+datasets <- list(mot2000, mot2005, mot2010, mot2015, mot2020) # Add all your datasets here
 
 # Assuming "Categories" is the common column to join by
 mot <- Reduce(function(x, y) safe_full_join(x, y, by = "Categories"), datasets)
@@ -328,7 +331,6 @@ mot_normalized <- mot_normalized |>
 mot_normalized <- mot_normalized |>
   group_by(Categories) |>
   summarize(`Sparkline` = list(Value), .groups = "drop")
-
 ```
 
 # Add percentage change to mot
@@ -365,8 +367,10 @@ mot
 
 # Apply custom formatting to the 2000 and 2020 columns
 mot <- mot |>
-  mutate(`2000` = custom_thousand_format(`2000`, decimalPoint = 0.01),
-         `2020` = custom_thousand_format(`2020`, decimalPoint = 0.01))
+  mutate(
+    `2000` = custom_thousand_format(`2000`, decimalPoint = 0.01),
+    `2020` = custom_thousand_format(`2020`, decimalPoint = 0.01)
+  )
 
 mot
 ```
@@ -397,7 +401,6 @@ Rearrange the mot dataset by Public/Private to match sparkline implementation
 mot <- shift_columns(mot, "Public/Private", c("Public", "Private", "Others"))
 
 mot
-
 ```
 
 # Create a GT table to display the mot data
@@ -410,45 +413,50 @@ gt_table <- mot |>
   select(-`2000`, -`2020`) |>
   # Add stubble based on the Public/Private column
   gt(
-    groupname_col = 'Public/Private'
+    groupname_col = "Public/Private"
   ) |>
   tab_options(quarto.disable_processing = TRUE) |>
-
   # Color the % column based on positive or negative values
   gt::tab_style(
     style = gt::cell_text(color = "forestgreen"),
-    locations = gt::cells_body(columns = `%`,
-                                rows = `%` > 0)) |>
+    locations = gt::cells_body(
+      columns = `%`,
+      rows = `%` > 0
+    )
+  ) |>
   gt::tab_style(
     style = gt::cell_text(color = "red"),
-    locations = gt::cells_body(columns = `%`,
-                                rows = `%` < 0)) |>
+    locations = gt::cells_body(
+      columns = `%`,
+      rows = `%` < 0
+    )
+  ) |>
   cols_label(`%` = "Change (%)") |>
-
   # Add sparkline to the table
-  gtExtras::gt_plt_sparkline(column = `Sparkline`,
-                             fig_dim = c(5, 20),
-                             type = "shaded",
-                             palette = c("black", "black", "red", "green", "grey"),
-                             label = FALSE) |>
-
+  gtExtras::gt_plt_sparkline(
+    column = `Sparkline`,
+    fig_dim = c(5, 20),
+    type = "shaded",
+    palette = c("black", "black", "red", "green", "grey"),
+    label = FALSE
+  ) |>
   # Text transform for adding the start and end year to the sparkline plot
   text_transform(
     locations = cells_body(columns = `Sparkline`),
     fn = function(x, row) {
-      x <- paste0(mot$`2000`[row] ,x, mot$`2020`[row])
+      x <- paste0(mot$`2000`[row], x, mot$`2020`[row])
       x
     }
   ) |>
-
   # Add up and down arrows based on the % column values using HTML and remove negative signs
   text_transform(
     locations = cells_body(columns = `%`),
     fn = function(x) {
       abs_x <- abs(as.numeric(x))
       ifelse(as.numeric(x) > 0,
-             paste0('<span style="color:forestgreen;">&#9650;</span> ', abs_x, "%"),  # HTML for upward arrow
-             paste0('<span style="color:red;">&#9660;</span> ', abs_x, "%"))  # HTML for downward arrow
+        paste0('<span style="color:forestgreen;">&#9650;</span> ', abs_x, "%"), # HTML for upward arrow
+        paste0('<span style="color:red;">&#9660;</span> ', abs_x, "%")
+      ) # HTML for downward arrow
     }
   )
 
@@ -466,7 +474,7 @@ gt_table
 ```{r}
 #| label: Add Header title and subtitle
 
-gt_table <- 
+gt_table <-
   gt_table |>
   tab_header(
     title = "Percentage Change in Modes of Transport to Work for Residents Aged 15 and Above",
@@ -475,23 +483,25 @@ gt_table <-
   tab_style(
     list(
       cell_fill(color = "#4D869C"),
-      cell_text( weight = 700, color = "white"),
+      cell_text(weight = 700, color = "white"),
       cell_borders(
         sides = "top",
         color = "black",
         weight = px(3)
-    )),
+      )
+    ),
     locations = cells_title(groups = "title")
   ) |>
-   tab_style(
+  tab_style(
     list(
       cell_fill(color = "#4D869C"),
-      cell_text( weight = 300, color = "white"),
-        cell_borders(
+      cell_text(weight = 300, color = "white"),
+      cell_borders(
         sides = "bottom",
         color = "black",
         weight = px(3)
-    )),
+      )
+    ),
     locations = cells_title(groups = "subtitle")
   ) |>
   tab_options(quarto.disable_processing = TRUE)
@@ -502,18 +512,18 @@ gt_table
 # Add Column Spanner Labels
 
 ```{r}
-gt_table <- 
+gt_table <-
   tab_spanner(
     gt_table,
     label = "Change and Trends",
     id = "changer",
     columns = c(`%`, `Sparkline`)
   ) |>
- tab_style(
+  tab_style(
     style = list(
       cell_text(weight = 500, size = px(14))
     ),
-    locations = cells_column_spanners() 
+    locations = cells_column_spanners()
   ) |>
   tab_options(quarto.disable_processing = TRUE)
 
@@ -553,7 +563,7 @@ gt_table
 gt_table <- gt_table |>
   tab_style(
     style = list(
-      cell_text(weight = 700, size = px(18))  # Correctly include size within cell_text
+      cell_text(weight = 700, size = px(18)) # Correctly include size within cell_text
     ),
     locations = cells_column_labels()
   ) |>
@@ -576,7 +586,7 @@ gt_table <- gt_table |>
       )
     ),
     locations = cells_body(
-      rows = c(4, 10, 13)  # Assuming the first three rows are summary rows
+      rows = c(4, 10, 13) # Assuming the first three rows are summary rows
     )
   ) |>
   tab_options(quarto.disable_processing = TRUE)
@@ -594,7 +604,7 @@ gt_table <- gt_table |>
         sides = "right"
       )
     ),
-    locations =  cells_body(
+    locations = cells_body(
       columns = 1
     )
   ) |>
@@ -661,4 +671,7 @@ gt_table <- gt_table |>
 
 gt_table
 ```
+<<<<<<< HEAD
 
+=======
+>>>>>>> 6ba876459ef3b23114a0d2e1fb06182a041f831b
