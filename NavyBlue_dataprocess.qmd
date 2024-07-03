@@ -31,9 +31,14 @@ min_max_normalise <- function(x) {
 }
 
 # Define a custom function to format numbers
-custom_thousand_format <- function(x, decimalPoint = 0.001, dividedBy = 1000) {
-  scales::number_format(accuracy = decimalPoint, big.mark = ",", suffix = "k")(x / dividedBy)
-}
+custom_thousand_format <- Vectorize(function(x, decimalPoint = 0.001) {
+  if (abs(x) >= 1e6) {
+    scales::number_format(accuracy = decimalPoint, big.mark = ",", suffix = "m")(x / 1e6)
+  } else {
+    scales::number_format(accuracy = decimalPoint, big.mark = ",", suffix = "k")(x / 1e3)
+  }
+})
+
 
 # Function to shift row data around
 shift_columns <- function(data, column_name, custom_order) {
@@ -437,7 +442,7 @@ gt_table <- mot |>
     column = `Sparkline`,
     fig_dim = c(5, 20),
     type = "shaded",
-    palette = c("black", "black", "red", "green", "grey"),
+    palette = c("black", rep("transparent",3), "grey"),
     label = FALSE
   ) |>
   # Text transform for adding the start and end year to the sparkline plot
@@ -448,6 +453,7 @@ gt_table <- mot |>
       x
     }
   ) |>
+  cols_label(`Sparkline` = "Trend") |> # Rename sparkline to trend
   # Add up and down arrows based on the % column values using HTML and remove negative signs
   text_transform(
     locations = cells_body(columns = `%`),
@@ -512,10 +518,12 @@ gt_table
 # Add Column Spanner Labels
 
 ```{r}
+#| label: Add Column Spanner Labels
+
 gt_table <-
   tab_spanner(
     gt_table,
-    label = "Change and Trends",
+    label = "Change and Trends (2000 - 2020)",
     id = "changer",
     columns = c(`%`, `Sparkline`)
   ) |>
@@ -533,7 +541,9 @@ gt_table
 # Change the border style
 
 ```{r}
-gt_table <- gt_table |>
+#| label: change the border style
+
+gt_table <- gt_table |> 
   tab_style(
     list(
       cell_fill(
@@ -560,6 +570,8 @@ gt_table
 # Change column header style
 
 ```{r}
+#| label: Change column header style
+
 gt_table <- gt_table |>
   tab_style(
     style = list(
@@ -575,8 +587,10 @@ gt_table
 # set public, private, other total with style
 
 ```{r}
-gt_table <- gt_table |>
-  tab_style(
+#| label: set public, private, other total with style
+
+gt_table <- gt_table |> 
+  tab_style( 
     style = list(
       cell_fill(color = "#EEF7FF"),
       cell_text(weight = 600),
@@ -586,7 +600,7 @@ gt_table <- gt_table |>
       )
     ),
     locations = cells_body(
-      rows = c(4, 10, 13) # Assuming the first three rows are summary rows
+      rows = c(4, 10, 13) # Assuming the selected rows are summary rows
     )
   ) |>
   tab_options(quarto.disable_processing = TRUE)
@@ -597,6 +611,8 @@ gt_table
 # add border right on the stub
 
 ```{r}
+#| label: add border right on the stub
+
 gt_table <- gt_table |>
   tab_style(
     style = list(
@@ -615,10 +631,12 @@ gt_table
 
 # Add Footnote to the table 
 ```{r}
+#| label: Add Footnote to the table
+
 gt_table <- gt_table |>
   tab_footnote(
     footnote = html("Removed Rows:<br>1. One Mode Of Transport,<br>2. Two Or More Modes Of Transport,<br>3. MRT & Car Only,<br>4. MRT & Another Mode,<br>5. Other Combinations Of MRT Or Public Bus,<br>6. Other combinations of MRT/LRT or Public Bus"),
-    locations = cells_column_labels("Categories")
+    locations = cells_column_labels("Categories") # Assuming the footnote is for the Categories column
   ) |>
   tab_style(
     list(
@@ -647,7 +665,7 @@ gt_table <- gt_table |>
 ```{r}
 gt_table <- gt_table |>
   tab_source_note(
-    source_note = "Source: Department of Statistics, Singapore"
+    source_note = "Source: Department of Statistics, Singapore" # add the source note for the entire table
   ) |>
   tab_style(
     list(
