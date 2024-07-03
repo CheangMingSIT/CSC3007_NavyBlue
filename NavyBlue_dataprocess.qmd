@@ -523,7 +523,7 @@ gt_table
 gt_table <-
   tab_spanner(
     gt_table,
-    label = "Change and Trends",
+    label = "Change and Trends (2000 - 2020)",
     id = "changer",
     columns = c(`%`, `Sparkline`)
   ) |>
