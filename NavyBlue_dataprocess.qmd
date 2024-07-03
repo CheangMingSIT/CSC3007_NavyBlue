@@ -671,7 +671,3 @@ gt_table <- gt_table |>
 
 gt_table
 ```
-<<<<<<< HEAD
-
-=======
->>>>>>> 6ba876459ef3b23114a0d2e1fb06182a041f831b
