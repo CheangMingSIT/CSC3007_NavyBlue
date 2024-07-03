@@ -116,7 +116,9 @@ include_graphics("images/transport_gt_table.png")
 
 # Further Suggestions for Interactivity
 
-For static visualization wise, one other addition we could add are figures in the x-axis to visualize how the trend changes over the years from 2000 to 2020. For an interactive visualization, we could use the 'react_sparkline()' function from the dataui package to create an interactive sparkline that allows users to hover over the sparkline to see the exact values for each year. This would allow users to see the exact values for each year and compare the trends between the different transportation sectors.
+For static visualization wise, one other addition we could add are figures in the x-axis to visualize how the trend changes over the years from 2000 to 2020. For an interactive visualization, we could use the 'react_sparkline()' function from the dataui package[^3] to create an interactive sparkline that allows users to hover over the sparkline to see the exact values for each year. This would allow users to see the exact values for each year and compare the trends between the different transportation sectors.
+
+[^3]: <https://github.com/timelyportfolio/dataui>
 
 # Conclusion
 
