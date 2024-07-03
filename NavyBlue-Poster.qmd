@@ -47,16 +47,18 @@ This visualization shows how transportation habits of employed residents have ch
 
 ```{r}
 #| label: fig-wsj-on-poster
-#| out-width: 100%
+#| out-width: 93%
 
 include_graphics("images/transport_graph.png")
 ```
 
 # Strengths and weakness
 
--   Strength: The visualization uses the bar chart format, which is clear and easy to read.
+-   Strength: The title is clear and concise, clearly describing what the visualization is about. The data is well organized and easy to read. The visualization is simple and easy to understand.
 
--   Weakness: While different shades of blue are used to differentiate the years, it may be difficult for the color blind to distinguish between the datasets. Some categories are too specific while others are more vague. This makes it difficult to interpret the data
+-   Weakness: The visualization does not properly indicate the transportation sector (Public/Private/Other). Exact values not included, leading to visual distortion. Range of data insufficient to discern any concrete differences between the years.
+
+
 
 
 ```{r}
@@ -77,6 +79,8 @@ include_graphics("images/transport_graph.png")
 
 4. *Group the data* into public, private and others respectively. 
 
+5. Usage of actual values to properly
+
 
 [^5]: <https://colorbrewer2.org/#type=sequential&scheme=Reds&n=5>
 
@@ -84,8 +88,11 @@ include_graphics("images/transport_graph.png")
 
 ## Data
 
--   Data was collected from 2000 to 2020 at 5-Year intervals from the Department of Statistics Singapore.[^6] Some data were omitted and combined during the cleaning process.The data includes rows that are not present in the entire dataset for certain years. Therefore, rows that are not in common throughout the dataset were removed.
--  
+-   Data was collected from 2000 to 2020 from the Department of Statistics Singapore.[^6] Some data were omitted and combined during the cleaning process.
+
+-  The data includes rows that are not present in the entire dataset for certain years. Therefore, rows that are not in common throughout the dataset were removed. To better display the data trend from 2000 to 2020, rows with vague or low data counts have been consolidated into a single data row as well.
+
+-   The population data was interpolated from the decennial U.S. census data.[^7]
 
 [^6]: <https://doi.org/10.25337/T7/ptycho.v2.0/US.14189004>
 
@@ -96,38 +103,31 @@ include_graphics("images/transport_graph.png")
 The Quarto publication framework and the R programming language were used,
 along with the following third-party packages:
 
--   *readxl* for data import
--   *tidyverse* for data transformation, including *ggplot2* for
-    visualization based on the grammar of graphics
--   *knitr* for dynamic document generation
--   *zoo* for interpolating annual population data from the decennial
-    U.S. census
+-   *tidyverse* collection of R packages used in this project like *dplyr* for data import
+-   *gt* is used to create presentation-ready tables
+-   *scales* package provides tools to easily scale variables for visualization (display values in thousand(k))
+-  *gtExtras* for adding sparklines to the table    
+    
+
 
 ```{=typst}
 #v(2em)
 ```
 # Improved Visualization
 
+```{r}
+#| label: fig-updated
+#| out-width: 95%
+include_graphics("images/improved_gt_table.png")
+```
 
 
 # Further Suggestions for Interactivity
 
-Because our visualization was intended for a poster, we did not
-implement any interactive features, including the infotip. However, if
-the data are visualized in an HTML document, interactive features can be
-achieved using the R packages such as *plotly*. In that case, we
-recommend that the tile does not change its fill color. In contrast, the
-original visualization changes the fill color of the activated tile to
-light blue (see @fig-infotip_color_change), which can be misinterpreted
-as a change in incidence. Instead, we suggest highlighting the activated
-tile by thickening its border.
+One other addition we could add figures in the x-axis to visualize how the trend changes overtime
 
 # Conclusion
 
 We successfully implemented all suggested improvements for the
-non-interactive visualization. By labeling every state and choosing a
-colorblind-friendly palette, the revised plot is more accessible. The
-logarithmic color scale makes the decrease in incidence after the
-introduction of the vaccine less striking but enables readers to detect
-patterns in the low-incidence range more easily.
+non-interactive visualization. By implementing the percentage change and sparklines, we are able to show a proper visualiaztion to show the visible changes of the transportation habits of employed residents over the years.
 
