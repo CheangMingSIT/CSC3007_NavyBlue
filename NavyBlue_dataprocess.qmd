@@ -603,6 +603,35 @@ gt_table <- gt_table |>
 gt_table
 ```
 
+# Add Footnote to the table 
+```{r}
+gt_table <- gt_table |>
+  tab_footnote(
+    footnote = html("Removed Rows:<br>1. One Mode Of Transport,<br>2. Two Or More Modes Of Transport,<br>3. MRT & Car Only,<br>4. MRT & Another Mode,<br>5. Other Combinations Of MRT Or Public Bus,<br>6. Other combinations of MRT/LRT or Public Bus"),
+    locations = cells_column_labels("Categories")
+  ) |>
+  tab_style(
+    list(
+      cell_text(
+        size = px(12),
+        font = "Helvetica",
+        color = "white"
+      ),
+      cell_fill(
+        color = "#4D869C"
+      ),
+      cell_borders(
+        sides = c("top"),
+        color = "black",
+        weight = px(3)
+      )
+    ),
+    locations = cells_footnotes()
+  ) |>
+  tab_options(quarto.disable_processing = TRUE)
+
+```
+
 # Add source note to the table
 
 ```{r}
@@ -621,7 +650,7 @@ gt_table <- gt_table |>
         color = "#4D869C"
       ),
       cell_borders(
-        sides = c("top", "bottom"),
+        sides = c("bottom"),
         color = "black",
         weight = px(3)
       )
@@ -632,3 +661,4 @@ gt_table <- gt_table |>
 
 gt_table
 ```
+
