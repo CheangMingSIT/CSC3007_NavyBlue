@@ -43,11 +43,11 @@ This visualization shows how transportation habits of employed residents have ch
 
 
 
-# Previous Visualization
+# Previous Visualization [^1]
 
 ```{r}
 #| label: fig-wsj-on-poster
-#| out-width: 93%
+#| out-width: 98%
 
 include_graphics("images/transport_graph.png")
 ```
@@ -61,14 +61,6 @@ include_graphics("images/transport_graph.png")
 
 
 
-```{r}
-#| label: fig-infotip_color_change
-#| fig-cap: "Zoomed-in screenshot of the original plot with and without
-#|   activated infotip."
-#| out-width: 100%
-
-#include_graphics("images/infotip_color_change.png")
-```
 
 # Suggested Improvements
 1. *Use sparkline* to show the change over the years.
@@ -79,24 +71,22 @@ include_graphics("images/transport_graph.png")
 
 4. *Group the data* into public, private and others respectively. 
 
-5. Usage of actual values to properly
+5. Usage of *actual values* instead of solely percentage values to properly display the change of values.
 
+[^1]: <https://www.straitstimes.com/singapore/more-spore-residents-take-trains-and-buses-to-work-fewer-drive-to-the-office-population>
 
-[^5]: <https://colorbrewer2.org/#type=sequential&scheme=Reds&n=5>
 
 # Implementation
 
 ## Data
 
--   Data was collected from 2000 to 2020 from the Department of Statistics Singapore.[^6] Some data were omitted and combined during the cleaning process.
+-   Data was collected from 2000 to 2020 from the Department of Statistics Singapore.[^2] Some data were omitted and combined during the cleaning process.
 
 -  The data includes rows that are not present in the entire dataset for certain years. Therefore, rows that are not in common throughout the dataset were removed. To better display the data trend from 2000 to 2020, rows with vague or low data counts have been consolidated into a single data row as well.
 
--   The population data was interpolated from the decennial U.S. census data.[^7]
 
-[^6]: <https://doi.org/10.25337/T7/ptycho.v2.0/US.14189004>
+[^2]: <https://tablebuilder.singstat.gov.sg/table/CT/17607>
 
-[^7]: <https://www.stats.indiana.edu/population/PopTotals/historic_counts_states.asp>
 
 ## Software
 
@@ -118,7 +108,7 @@ along with the following third-party packages:
 ```{r}
 #| label: fig-updated
 #| out-width: 95%
-include_graphics("images/improved_gt_table.png")
+include_graphics("images/transport_gt_table.png")
 ```
 
 

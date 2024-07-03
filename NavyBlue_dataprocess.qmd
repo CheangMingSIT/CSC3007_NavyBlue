@@ -688,4 +688,6 @@ gt_table <- gt_table |>
   tab_options(quarto.disable_processing = TRUE)
 
 gt_table
+
+gtsave(gt_table, file = "output_gt_table.png")
 ```
