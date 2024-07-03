@@ -84,6 +84,8 @@ include_graphics("images/transport_graph.png")
 
 -  The data includes rows that are not present in the entire dataset for certain years. Therefore, rows that are not in common throughout the dataset were removed. To better display the data trend from 2000 to 2020, rows with vague or low data counts have been consolidated into a single data row as well.
 
+- Column names were renamed to better reflect the data they represent.
+
 
 [^2]: <https://tablebuilder.singstat.gov.sg/table/CT/17607>
 
@@ -114,10 +116,10 @@ include_graphics("images/transport_gt_table.png")
 
 # Further Suggestions for Interactivity
 
-One other addition we could add figures in the x-axis to visualize how the trend changes overtime
+For static visualization wise, one other addition we could add are figures in the x-axis to visualize how the trend changes over the years from 2000 to 2020. For an interactive visualization, we could use the 'react_sparkline()' function from the dataui package to create an interactive sparkline that allows users to hover over the sparkline to see the exact values for each year. This would allow users to see the exact values for each year and compare the trends between the different transportation sectors.
 
 # Conclusion
 
 We successfully implemented all suggested improvements for the
-non-interactive visualization. By implementing the percentage change and sparklines, we are able to show a proper visualiaztion to show the visible changes of the transportation habits of employed residents over the years.
+non-interactive visualization. By implementing the percentage change and sparklines, we are able to display a clear visualiaztion that shows the change in the trends of transportation choices by employed residents over the years.
 
